@@ -33,7 +33,8 @@ def lambda_handler(event, context):
 
         # 메시지를 JSON으로 파싱
         data = json.loads(message)
-        data = modifi_json_for_analysis(data["Message"])
+        data = json.loads(data["Message"])
+        data = modifi_json_for_analysis(data)
 
         # 데이터베이스에 업로드
         upload_to_DB(data)
