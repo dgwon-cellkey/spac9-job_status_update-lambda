@@ -116,7 +116,7 @@ def modifi_json_for_analysis(data: dict):
 
         data["status"] = status
 
-    if "step_detail" not in data:
+    if not data["step_detail"]:
         step_detail = ""
         step = data["step"]
         if step == 8:
