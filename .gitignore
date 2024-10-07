@@ -1,0 +1,6 @@
+job_status_update/
+.vscode/
+pymysql/
+PyMySQL*/
+lambda_package/
+*.zip
