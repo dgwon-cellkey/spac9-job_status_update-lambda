@@ -39,7 +39,10 @@ def lambda_handler(event, context):
         data = modifi_json_for_analysis(data)
 
         # 데이터베이스에 업로드
-        upload_to_DB(data)
+        try:
+            upload_to_DB(data)
+        except Exception as e:
+            print(str(e))
 
         sqs = boto3.client("sqs")
 
