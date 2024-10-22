@@ -1,6 +1,7 @@
 import json
 import os
-from datetime import datetime
+
+import boto3
 
 import pymysql
 
@@ -9,6 +10,7 @@ DB_HOST = os.getenv("DB_HOST", "127.0.0.1")
 DB_USER = os.getenv("DB_USER")
 DB_PASSWORD = os.getenv("DB_PASSWORD")
 DB_NAME = os.getenv("DB_NAME")
+SQS_URL = os.getenv("SQS_URL")
 
 
 # DB 연결 함수
@@ -38,6 +40,14 @@ def lambda_handler(event, context):
 
         # 데이터베이스에 업로드
         upload_to_DB(data)
+
+        sqs = boto3.client("sqs")
+
+        receipt_handle = record["receiptHandle"]
+
+        # 메시지 처리 후 삭제
+        sqs.delete_message(QueueUrl=SQS_URL, ReceiptHandle=receipt_handle)
+        print(f"메시지 삭제 완료: {receipt_handle}")
 
     return {"statusCode": 200, "body": json.dumps("Data processed successfully!")}
 
