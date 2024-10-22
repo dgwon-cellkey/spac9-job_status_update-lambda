@@ -30,16 +30,17 @@ def connect_to_DB():
 def lambda_handler(event, context):
     # SQS 메시지 처리
     for record in event["Records"]:
-        message = record["body"]
-        print(f"Received message: {message}")
 
-        # 메시지를 JSON으로 파싱
-        data = json.loads(message)
-        data = json.loads(data["Message"])
-        data = modifi_json_for_analysis(data)
-
-        # 데이터베이스에 업로드
         try:
+            message = record["body"]
+            print(f"Received message: {message}")
+
+            # 메시지를 JSON으로 파싱
+            data = json.loads(message)
+            data = json.loads(data["Message"])
+            data = modifi_json_for_analysis(data)
+
+            # 데이터베이스에 업로드
             upload_to_DB(data)
         except Exception as e:
             print(str(e))
