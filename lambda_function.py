@@ -1,5 +1,6 @@
 import json
 import os
+import traceback
 
 import boto3
 
@@ -29,29 +30,42 @@ def connect_to_DB():
 # Lambda 함수 시작점
 def lambda_handler(event, context):
     # SQS 메시지 처리
+    sqs = boto3.client("sqs")
     for record in event["Records"]:
-
+        print(record)
         try:
             message = record["body"]
             print(f"Received message: {message}")
 
             # 메시지를 JSON으로 파싱
             data = json.loads(message)
+            print(data)
             data = json.loads(data["Message"])
+            print(data)
             data = modifi_json_for_analysis(data)
+            print(data)
+            receipt_handle = record["receiptHandle"]
+            print(receipt_handle)
+
+            sqs.delete_message(QueueUrl=SQS_URL, ReceiptHandle=receipt_handle)
+            print(f"메시지 삭제 완료: {receipt_handle}")
 
             # 데이터베이스에 업로드
             upload_to_DB(data)
+
+        except NameError:
+            print("중복된 데이터가 감지되었습니다. 메시지를 삭제합니다.")
         except Exception as e:
-            print(str(e))
+            print(f"error {str(e)}")
+        finally:
+            try:
+                receipt_handle = record["receiptHandle"]
 
-        sqs = boto3.client("sqs")
-
-        receipt_handle = record["receiptHandle"]
-
-        # 메시지 처리 후 삭제
-        sqs.delete_message(QueueUrl=SQS_URL, ReceiptHandle=receipt_handle)
-        print(f"메시지 삭제 완료: {receipt_handle}")
+                sqs.delete_message(QueueUrl=SQS_URL, ReceiptHandle=receipt_handle)
+                print(f"메시지 삭제 완료: {receipt_handle}")
+            except Exception as e:
+                print(f"delete error: {str(e)}")
+                traceback.print_exc()
 
     return {"statusCode": 200, "body": json.dumps("Data processed successfully!")}
 
@@ -61,6 +75,16 @@ def upload_to_DB(data):
     connection = connect_to_DB()
     try:
         with connection.cursor() as cursor:
+            query = """
+                SELECT COUNT(*) as count FROM job_plan_status 
+                WHERE job_plan_id = %s AND analysis_no = %s AND step = %s AND status = %s
+            """
+            cursor.execute(query, (data["job_plan_id"], data["analysis_no"], data["step"], data["status"]))
+            result = cursor.fetchone()
+
+            if result["count"] != 0:
+                raise ValueError(f"중복된 데이터가 감지되었습니다: {data}")
+
             if data["status"] == "COMPLETE":
                 # Get start_date of IN_PROGRESS status with same job_plan_id, step
                 sql_select = """
@@ -108,7 +132,9 @@ def upload_to_DB(data):
             )
         connection.commit()
     except Exception as e:
-        print(f"Error occurred: {e}")
+        # 전체 스택 트레이스 출력
+        traceback.print_exc()
+        print(f"Error occurred: {str(e)}")
     finally:
         connection.close()
 
