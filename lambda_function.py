@@ -141,22 +141,29 @@ def upload_to_DB(data):
 
 def modifi_json_for_analysis(data: dict):
 
-    # there should be only Start_date. and COMPLETE is up, it takes start_date from before one.
+    if "start_date" not in data:  # handle the step0-4
+        data["start_date"] = data["timestamp"]
+        data["step"] = data["step_number"]
+        data["step_detail"] = data["description"]
+        data["description"] = data["type"]
+
     data["start_date"] = timestamp_modi(data["start_date"])
     data["end_date"] = None
 
     if "status" not in data:
         status = ""
-        if data["description"].startswith("Start"):
+        if data["description"].lower().startswith("start"):
             status = "IN_PROGRESS"
-        elif data["description"].startswith("Finish"):
+        elif data["description"].lower().startswith("finish"):
             status = "COMPLETE"
-        elif data["description"].startswith("Error"):
+        elif data["description"].lower().startswith("error"):
             status = "ERROR"
 
         data["status"] = status
 
-    if not data["step_detail"]:
+    if data["step_detail"]:
+        data["description"] = data["step_detail"]
+    else:
         step_detail = ""
         step = data["step"]
         if step == 8:
