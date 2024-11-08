@@ -98,10 +98,11 @@ def upload_to_DB(data):
                 cursor.execute(sql_select, (data["job_plan_id"], data["step"]))
                 result = cursor.fetchone()
 
-                # If a record with an IN_PROGRESS status exists
+                # If a record with an COMPLETE status exists
                 if result:
                     raise DuplicateDataError
-                # delete because of unique rule for anlaysis_no and step pair * TODO: to be reset rule into analysis_no, step, and status
+
+                # delete wait message
                 sql_delete = """
                     DELETE FROM job_plan_status
                     WHERE job_plan_id = %s AND step = %s AND status = 'WAIT'
