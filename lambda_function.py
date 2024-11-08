@@ -130,6 +130,22 @@ def upload_to_DB(data):
                     data["end_date"],
                 ),
             )
+
+            if data["status"] == "COMPLETE" and int(data["step"]) < 10:
+                cursor.execute(
+                    sql,
+                    (
+                        data["job_plan_id"],
+                        data["analysis_no"],
+                        data["step"],
+                        data["step_detail"],
+                        "WAIT",
+                        data["description"],
+                        data["start_date"],
+                        data["end_date"],
+                    ),
+                )
+
         connection.commit()
     except Exception as e:
         # 전체 스택 트레이스 출력
