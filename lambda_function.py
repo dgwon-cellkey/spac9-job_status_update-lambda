@@ -85,6 +85,14 @@ def upload_to_DB(data):
             if result["count"] != 0:
                 raise ValueError(f"중복된 데이터가 감지되었습니다: {data}")
 
+            if data["status"] == "IN_PROGRESS":
+                # delete because of unique rule for anlaysis_no and step pair * TODO: to be reset rule into analysis_no, step, and status
+                sql_delete = """
+                    DELETE FROM job_plan_status
+                    WHERE job_plan_id = %s AND step = %s AND status = 'WAIT'
+                """
+                cursor.execute(sql_delete, (data["job_plan_id"], data["step"]))
+
             if data["status"] == "COMPLETE":
                 # Get start_date of IN_PROGRESS status with same job_plan_id, step
                 sql_select = """
@@ -131,13 +139,15 @@ def upload_to_DB(data):
                 ),
             )
 
+            # add wait on next step when the step is completed
             if data["status"] == "COMPLETE" and int(data["step"]) < 10:
+                next_step = str(int(data["step"]) + 1)
                 cursor.execute(
                     sql,
                     (
                         data["job_plan_id"],
                         data["analysis_no"],
-                        data["step"],
+                        next_step,
                         data["step_detail"],
                         "WAIT",
                         data["description"],
