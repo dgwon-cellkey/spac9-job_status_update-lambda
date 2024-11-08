@@ -70,6 +70,10 @@ def lambda_handler(event, context):
     return {"statusCode": 200, "body": json.dumps("Data processed successfully!")}
 
 
+class DuplicateDataError(Exception):
+    pass
+
+
 # DB로 데이터 업로드 함수
 def upload_to_DB(data):
     connection = connect_to_DB()
@@ -86,6 +90,17 @@ def upload_to_DB(data):
                 raise ValueError(f"중복된 데이터가 감지되었습니다: {data}")
 
             if data["status"] == "IN_PROGRESS":
+                # check the completed message
+                sql_select = """
+                    SELECT start_date FROM job_plan_status
+                    WHERE job_plan_id = %s AND step = %s AND status = 'COMPLETE'
+                """
+                cursor.execute(sql_select, (data["job_plan_id"], data["step"]))
+                result = cursor.fetchone()
+
+                # If a record with an IN_PROGRESS status exists
+                if result:
+                    raise DuplicateDataError
                 # delete because of unique rule for anlaysis_no and step pair * TODO: to be reset rule into analysis_no, step, and status
                 sql_delete = """
                     DELETE FROM job_plan_status
@@ -157,6 +172,8 @@ def upload_to_DB(data):
                 )
 
         connection.commit()
+    except DuplicateDataError:
+        pass
     except Exception as e:
         # 전체 스택 트레이스 출력
         traceback.print_exc()
