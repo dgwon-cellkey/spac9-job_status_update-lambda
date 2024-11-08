@@ -85,6 +85,14 @@ def upload_to_DB(data):
             if result["count"] != 0:
                 raise ValueError(f"중복된 데이터가 감지되었습니다: {data}")
 
+            if data["status"] == "IN_PROGRESS":
+                # delete because of unique rule for anlaysis_no and step pair * TODO: to be reset rule into analysis_no, step, and status
+                sql_delete = """
+                    DELETE FROM job_plan_status
+                    WHERE job_plan_id = %s AND step = %s AND status = 'WAIT'
+                """
+                cursor.execute(sql_delete, (data["job_plan_id"], data["step"]))
+
             if data["status"] == "COMPLETE":
                 # Get start_date of IN_PROGRESS status with same job_plan_id, step
                 sql_select = """
@@ -130,6 +138,24 @@ def upload_to_DB(data):
                     data["end_date"],
                 ),
             )
+
+            # add wait on next step when the step is completed
+            if data["status"] == "COMPLETE" and int(data["step"]) < 10:
+                next_step = str(int(data["step"]) + 1)
+                cursor.execute(
+                    sql,
+                    (
+                        data["job_plan_id"],
+                        data["analysis_no"],
+                        next_step,
+                        data["step_detail"],
+                        "WAIT",
+                        data["description"],
+                        data["start_date"],
+                        data["end_date"],
+                    ),
+                )
+
         connection.commit()
     except Exception as e:
         # 전체 스택 트레이스 출력
@@ -141,22 +167,29 @@ def upload_to_DB(data):
 
 def modifi_json_for_analysis(data: dict):
 
-    # there should be only Start_date. and COMPLETE is up, it takes start_date from before one.
+    if "start_date" not in data:  # handle the step0-4
+        data["start_date"] = data["timestamp"]
+        data["step"] = data["step_number"]
+        data["step_detail"] = data["description"]
+        data["description"] = data["type"]
+
     data["start_date"] = timestamp_modi(data["start_date"])
     data["end_date"] = None
 
     if "status" not in data:
         status = ""
-        if data["description"].startswith("Start"):
+        if data["description"].lower().startswith("start"):
             status = "IN_PROGRESS"
-        elif data["description"].startswith("Finish"):
+        elif data["description"].lower().startswith("finish"):
             status = "COMPLETE"
-        elif data["description"].startswith("Error"):
+        elif data["description"].lower().startswith("error"):
             status = "ERROR"
 
         data["status"] = status
 
-    if not data["step_detail"]:
+    if data["step_detail"]:
+        data["description"] = data["step_detail"]
+    else:
         step_detail = ""
         step = data["step"]
         if step == 8:
