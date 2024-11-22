@@ -140,6 +140,48 @@ def upload_to_DB(data):
                 ) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             """
 
+            if data["status"] == "IN_PROGRESS":
+                if int(data["step"]) == 4:
+                    data["description"] = "Uploading converted files to cloud"
+                elif int(data["step"]) == 5:
+                    data["description"] = "Processing planned job"
+                elif int(data["step"]) == 6:
+                    data["description"] = "Executing search analysis"
+                elif int(data["step"]) == 7:
+                    data["description"] = "Executing caching Files"
+                elif int(data["step"]) == 8:
+                    data["description"] = "Executing peptide profiling"
+                elif int(data["step"]) == 9:
+                    data["description"] = "Executing statistics analysis"
+                elif int(data["step"]) == 10:
+                    data["description"] = "Executing network analysis"
+            elif data["status"] == "COMPLETE":
+                if int(data["step"]) == 5:
+                    data["description"] = "Completed planned job"
+                elif int(data["step"]) == 6:
+                    data["description"] = "Completed search analysis"
+                elif int(data["step"]) == 7:
+                    data["description"] = "Completed caching Files"
+                elif int(data["step"]) == 8:
+                    data["description"] = "Completed peptide profiling"
+                elif int(data["step"]) == 9:
+                    data["description"] = "Completed statistics analysis"
+                elif int(data["step"]) == 10:
+                    data["description"] = "Completed network analysis"
+            elif data["status"] == "ERROR":
+                if int(data["step"]) == 5:
+                    data["description"] = "Error planned job"
+                elif int(data["step"]) == 6:
+                    data["description"] = "Error search analysis"
+                elif int(data["step"]) == 7:
+                    data["description"] = "Error caching Files"
+                elif int(data["step"]) == 8:
+                    data["description"] = "Error peptide profiling"
+                elif int(data["step"]) == 9:
+                    data["description"] = "Error statistics analysis"
+                elif int(data["step"]) == 10:
+                    data["description"] = "Error network analysis"
+
             # upload
             cursor.execute(
                 sql,
@@ -166,7 +208,7 @@ def upload_to_DB(data):
                         next_step,
                         data["step_detail"],
                         "WAIT",
-                        data["description"],
+                        f"Preparing for Step.{next_step}",
                         data["start_date"],
                         data["end_date"],
                     ),
