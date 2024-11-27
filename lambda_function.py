@@ -236,6 +236,11 @@ def modifi_json_for_analysis(data: dict):
     data["start_date"] = timestamp_modi(data["start_date"])
     data["end_date"] = None
 
+    if "analysis_no" not in data:
+        splitted_job_plan_id = data["job_plan_id"].split("_")
+        if len(splitted_job_plan_id) == 3:
+            data["analysis_no"] = splitted_job_plan_id[1]
+
     if "status" not in data:
         status = ""
         if data["description"].lower().startswith("start"):
