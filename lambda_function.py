@@ -109,11 +109,11 @@ def upload_to_DB(data):
                 """
                 cursor.execute(sql_delete, (data["job_plan_id"], data["step"]))
 
-            if data["status"] == "COMPLETE":
+            if data["status"] == "COMPLETE" or data["status"] == "ERROR":
                 # Get start_date of IN_PROGRESS status with same job_plan_id, step
                 sql_select = """
                     SELECT start_date FROM job_plan_status
-                    WHERE job_plan_id = %s AND step = %s AND status = 'IN_PROGRESS'
+                    WHERE job_plan_id = %s AND step = %s AND (status = 'IN_PROGRESS' OR status = 'WAIT')
                 """
                 cursor.execute(sql_select, (data["job_plan_id"], data["step"]))
                 result = cursor.fetchone()
