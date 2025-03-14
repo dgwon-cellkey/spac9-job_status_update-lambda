@@ -18,6 +18,9 @@ fi
 
 source "$1"
 
+echo "Installing dependencies..."
+pip install pymysql -t
+
 echo "Creating zip file..."
 zip -r $ZIP_FILE lambda_function.py
 
