@@ -18,11 +18,17 @@ fi
 
 source "$1"
 
+echo "Create lambda_package directory..."
+mkdir -p lambda_package
+cp lambda_function.py lambda_package/
+
 echo "Installing dependencies..."
-pip install pymysql -t .
+pip install pymysql -t lambda_package
 
 echo "Creating zip file..."
-zip -r $ZIP_FILE lambda_function.py
+cd lambda_package
+zip -r ../$ZIP_FILE .
+cd ..
 
 echo "Verify that Lambda exist and proceed with Deployment"
 if aws lambda get-function --function-name $FUNCTION_NAME >/dev/null 2>&1; then
