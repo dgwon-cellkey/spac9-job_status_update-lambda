@@ -1,0 +1,5 @@
+ZIP_FILE="lambda_package.zip"
+FUNCTION_NAME="spac9-job_plan_status_update"
+RUNTIME="python3.11"
+ROLE_ARN="arn:aws:iam::010438476600:role/cellkeyspac9-serverless-lambda-role"
+HANDLER="lambda_function.lambda_handler"
