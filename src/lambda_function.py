@@ -148,7 +148,7 @@ def lambda_handler(event, context):
         try:
             body = json.loads(record["body"])
             message = json.loads(body["Message"])
-
+            print(message)
             data = utils.modifi_message_for_analysis(message)
             upload_to_DB(data, secrets)
         except Exception as e:

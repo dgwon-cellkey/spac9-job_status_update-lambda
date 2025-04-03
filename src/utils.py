@@ -52,7 +52,7 @@ def modifi_message_for_analysis(data: dict) -> dict:
     data["end_date"] = None
 
     # status 결정: 이미 존재하지 않으면 description을 기준으로 설정
-    if not data.get("status"):
+    if not data.get("status", ""):
         desc_lower = data.get("description", "").lower()
         if desc_lower.startswith("start"):
             data["status"] = "IN_PROGRESS"
@@ -70,8 +70,8 @@ def modifi_message_for_analysis(data: dict) -> dict:
 
 
 def get_secrets():
-    secret_name = os.environ.get("DB_SECRET_NAME")
-    region_name = os.environ.get("AWS_REGION", "us-east-1")
+    secret_name = os.getenv("secret_name")
+    region_name = os.getenv("region_name")
 
     # Secrets Manager 클라이언트 생성
     session = boto3.session.Session()
