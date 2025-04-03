@@ -70,8 +70,8 @@ def modifi_message_for_analysis(data: dict) -> dict:
 
 
 def get_secrets():
-    secret_name = "config/spac9-analysis"
-    region_name = "ap-northeast-2"
+    secret_name = os.getenv("secret_name")
+    region_name = os.getenv("region_name")
 
     # Secrets Manager 클라이언트 생성
     session = boto3.session.Session()
