@@ -21,6 +21,7 @@ source "$1"
 echo "Create lambda_package directory..."
 mkdir -p lambda_package
 cp lambda_function.py lambda_package/
+cp utils.py lambda_package/
 
 echo "Installing dependencies..."
 pip install pymysql -t lambda_package
