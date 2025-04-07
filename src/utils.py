@@ -64,7 +64,7 @@ def modifi_message_for_analysis(data: dict) -> dict:
             data["status"] = ""
 
     # description 매핑 갱신 for user
-    data["description"] = get_description(data["status"], data["step"], data.get("description", ""))
+    data["description"] = get_description(data["status"], data["step"], data.get("step_detail", ""))
 
     return data
 
@@ -118,8 +118,9 @@ def delete_sqs_message(receipt_handle, sqs_url):
 def get_description(status, step, default_desc=""):
     """
     주어진 상태와 step에 따른 description을 리턴합니다.
+    0-4단계의 경우 step_detail의 값을 활용합니다.
     """
-    return DESCRIPTION_MAPPING[status][int(step)]
+    return DESCRIPTION_MAPPING[status].get(int(step), default_desc)
 
 
 def process_step0_4(data: dict) -> dict:
