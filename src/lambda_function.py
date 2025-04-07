@@ -123,10 +123,11 @@ def upload_to_DB(data: dict, secrets: dict):
             records = cursor.fetchall()
 
             data = pre_insert_stage(data, records, cursor)  # Start/End date 갱신되는 경우를 위한 업데이트
+            connection.commit()
             perform_insert(data, cursor)
+            connection.commit()
             post_insert_stage(data, cursor)
-
-        connection.commit()
+            connection.commit()
     except DuplicateDataError:
         print("DuplicateDataError 발생. DB 업로드를 건너뜁니다.")
     except Exception as e:
